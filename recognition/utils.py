@@ -74,3 +74,22 @@ def save_face_data(id, encoding):
     # Save the updated classifier and data
     joblib.dump((classifier, ids, encodings), MODEL_PATH)
 
+def predict_face(encoding):
+    classifier, ids, encodings = load_data()
+    
+    # Predict the class of the input encoding
+    if (len(encodings) > 1):
+        prediction = classifier.predict([encoding])
+
+        # Calculate the distance to the closest known face
+        distances = face_recognition.face_distance(encodings, encoding)
+        best_match_index = np.argmin(distances)
+
+        # Set a threshold for the distance
+        threshold = 0.55
+        if distances[best_match_index] > threshold:
+            return None
+
+        return prediction[0]
+    else:
+        return None
