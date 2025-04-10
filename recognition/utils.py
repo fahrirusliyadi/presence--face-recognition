@@ -107,5 +107,7 @@ def delete_face_data(id):
         del encodings[index]
 
         train_classifier(classifier, ids, encodings)
+        
+        return True
     else:
-        print(f"User with ID {id} not found.")
+        return False

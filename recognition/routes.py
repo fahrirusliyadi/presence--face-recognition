@@ -11,7 +11,7 @@ def update():
     if 'user_id' not in request.form:
         return "User ID is required", 400
 
-    user_id = request.form.get('user_id')
+    user_id = int(request.form.get('user_id'))
     image = request.files['image']
     encoding = get_face_encoding(image)
     
@@ -38,7 +38,7 @@ def recognize():
     if prediction is None:
         return jsonify({"error": "No matching face found"}), 400
     else:
-        return jsonify({"data": prediction}), 200
+        return jsonify({"data": int(prediction)}), 200
     
 @app.route("/delete", methods=["DELETE"])
 def delete():
@@ -49,7 +49,9 @@ def delete():
     if not data or 'user_id' not in data:
         return jsonify({ "error": "User ID is required in JSON body" }), 400
 
-    user_id = data['user_id']
-    delete_face_data(user_id)
+    user_id = int(data['user_id'])
 
-    return jsonify({"message": f"User {user_id} deleted successfully!"}), 200
+    if delete_face_data(user_id):
+        return jsonify({"message": f"User {user_id} deleted successfully!"}), 200
+    
+    return jsonify({"error": f"User {user_id} not found"}), 404
