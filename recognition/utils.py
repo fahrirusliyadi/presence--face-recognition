@@ -56,6 +56,14 @@ def load_data():
 
     return classifier, ids, encodings
 
+def train_classifier(classifier, ids, encodings):
+    # Train the classifier with the updated data
+    if (len(encodings) > 1):
+        classifier.fit(encodings, ids)
+    
+    # Save the updated classifier and data
+    joblib.dump((classifier, ids, encodings), MODEL_PATH)
+
 def save_face_data(id, encoding):
     classifier, ids, encodings = load_data()
     
@@ -67,12 +75,7 @@ def save_face_data(id, encoding):
         ids.append(id)
         encodings.append(encoding)
 
-    # Train the classifier with the new data
-    if (len(encodings) > 1):
-        classifier.fit(encodings, ids)
-    
-    # Save the updated classifier and data
-    joblib.dump((classifier, ids, encodings), MODEL_PATH)
+    train_classifier(classifier, ids, encodings)
 
 def predict_face(encoding):
     classifier, ids, encodings = load_data()
@@ -93,3 +96,16 @@ def predict_face(encoding):
         return prediction[0]
     else:
         return None
+    
+def delete_face_data(id):
+    classifier, ids, encodings = load_data()
+
+    # If the user exists, remove their encoding
+    if id in ids:
+        index = ids.index(id)
+        del ids[index]
+        del encodings[index]
+
+        train_classifier(classifier, ids, encodings)
+    else:
+        print(f"User with ID {id} not found.")

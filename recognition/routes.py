@@ -1,6 +1,6 @@
 from app import app
 from flask import jsonify, request
-from recognition.utils import get_face_encoding, predict_face, save_face_data
+from recognition.utils import delete_face_data, get_face_encoding, predict_face, save_face_data
 
 
 @app.route("/update", methods=["POST"])
@@ -40,3 +40,16 @@ def recognize():
     else:
         return jsonify({"data": prediction}), 200
     
+@app.route("/delete", methods=["DELETE"])
+def delete():
+    # Get JSON data from request
+    data = request.get_json()
+    
+    # Check if the JSON data exists and has user_id
+    if not data or 'user_id' not in data:
+        return jsonify({ "error": "User ID is required in JSON body" }), 400
+
+    user_id = data['user_id']
+    delete_face_data(user_id)
+
+    return jsonify({"message": f"User {user_id} deleted successfully!"}), 200
