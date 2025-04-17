@@ -6,6 +6,24 @@ from app.errors import MissingParameterError, ValidationError, ResourceNotFoundE
 
 @app.route("/update", methods=["POST"])
 def update():
+    """
+    Update or add a user's face data to the recognition system.
+    
+    Request:
+        - Method: POST
+        - Form parameters:
+            - user_id: Unique identifier for the user
+        - Files:
+            - image: User's face image file
+            
+    Returns:
+        - 200: JSON response with success message
+        
+    Raises:
+        - MissingParameterError: If user_id or image is missing
+        - NoFaceError: If no face is detected in the image
+        - MultipleFacesError: If multiple faces are detected in the image
+    """
     if 'image' not in request.files:
         raise MissingParameterError("Image URL")
     
@@ -21,6 +39,23 @@ def update():
 
 @app.route("/recognize", methods=["POST"])
 def recognize():
+    """
+    Recognize a user from their face image.
+    
+    Request:
+        - Method: POST
+        - Files:
+            - image: Face image to be recognized
+            
+    Returns:
+        - 200: JSON response with the recognized user_id in the data field
+        
+    Raises:
+        - MissingParameterError: If image is missing
+        - ValidationError: If no matching face is found
+        - NoFaceError: If no face is detected in the image
+        - MultipleFacesError: If multiple faces are detected in the image
+    """
     if 'image' not in request.files:
         raise MissingParameterError("Image URL")
     
@@ -36,6 +71,21 @@ def recognize():
     
 @app.route("/delete", methods=["DELETE"])
 def delete():
+    """
+    Delete a user's face data from the recognition system.
+    
+    Request:
+        - Method: DELETE
+        - JSON body:
+            - user_id: Unique identifier of the user to delete
+            
+    Returns:
+        - 200: JSON response with success message
+        
+    Raises:
+        - MissingParameterError: If user_id is missing
+        - ResourceNotFoundError: If the specified user is not found
+    """
     # Get JSON data from request
     data = request.get_json()
     

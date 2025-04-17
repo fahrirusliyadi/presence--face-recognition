@@ -50,6 +50,15 @@ def get_face_encoding(image_source):
     return face_encoding
 
 def load_data():
+    """
+    Load face recognition model data from disk or initialize a new model.
+    
+    Returns:
+        tuple: A tuple containing:
+            - classifier (sklearn.svm.SVC): SVM classifier for face recognition
+            - ids (list): List of user IDs corresponding to face encodings
+            - encodings (list): List of face encodings used for training
+    """
     if (os.path.exists(MODEL_PATH)):
         classifier, ids, encodings = joblib.load(MODEL_PATH)
     else:
@@ -60,6 +69,18 @@ def load_data():
     return classifier, ids, encodings
 
 def train_classifier(classifier, ids, encodings):
+    """
+    Train the SVM classifier with face encodings and save the model to disk.
+    
+    Args:
+        classifier (sklearn.svm.SVC): SVM classifier to train
+        ids (list): List of user IDs corresponding to face encodings
+        encodings (list): List of face encodings to train the classifier with
+        
+    Note:
+        Training is only performed when there are at least 2 face encodings.
+        The trained model and data are saved to disk at MODEL_PATH.
+    """
     # Train the classifier with the updated data
     if (len(encodings) > 1):
         classifier.fit(encodings, ids)
@@ -68,6 +89,18 @@ def train_classifier(classifier, ids, encodings):
     joblib.dump((classifier, ids, encodings), MODEL_PATH)
 
 def save_face_data(id, encoding):
+    """
+    Save or update a user's face encoding in the recognition model.
+    
+    Args:
+        id: User identifier
+        encoding (numpy.ndarray): Face encoding to save
+        
+    Note:
+        If the user ID already exists, their face encoding will be updated.
+        Otherwise, a new entry will be added to the model.
+        The model is automatically retrained and saved after the update.
+    """
     classifier, ids, encodings = load_data()
     
     # If the user already exists, update their encoding
@@ -81,6 +114,22 @@ def save_face_data(id, encoding):
     train_classifier(classifier, ids, encodings)
 
 def predict_face(encoding):
+    """
+    Predict the identity of a face from its encoding.
+    
+    Args:
+        encoding (numpy.ndarray): Face encoding to identify
+        
+    Returns:
+        Union[str, None]: User ID of the recognized face, or None if:
+            - The face is not recognized (distance above threshold)
+            - There are not enough samples to perform prediction
+            - No match is found
+            
+    Note:
+        Uses face distance to verify the match quality with a threshold of 0.6.
+        Lower distances indicate better matches.
+    """
     classifier, ids, encodings = load_data()
     
     # Predict the class of the input encoding
@@ -90,9 +139,8 @@ def predict_face(encoding):
         # Calculate the distance to the closest known face
         distances = face_recognition.face_distance(encodings, encoding)
         best_match_index = np.argmin(distances)
-
         # Set a threshold for the distance
-        threshold = 0.55
+        threshold = 0.6
         if distances[best_match_index] > threshold:
             return None
 
@@ -101,6 +149,19 @@ def predict_face(encoding):
         return None
     
 def delete_face_data(id):
+    """
+    Remove a user's face data from the recognition model.
+    
+    Args:
+        id: User identifier to remove
+        
+    Returns:
+        bool: True if the user was found and deleted, False if the user was not found
+        
+    Note:
+        If the user is found and deleted, the model is automatically retrained
+        and saved with the updated data.
+    """
     classifier, ids, encodings = load_data()
 
     # If the user exists, remove their encoding
