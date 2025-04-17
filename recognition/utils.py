@@ -5,6 +5,8 @@ import joblib
 import os
 
 from sklearn import svm
+from recognition.errors import MultipleFacesError, NoFaceError
+from app.errors import AppError
 
 MODEL_PATH = 'recognition/model.pkl'
 
@@ -17,34 +19,35 @@ def get_face_encoding(image_source):
         
     Returns:
         numpy.ndarray: Face encoding found in the image
+        
+    Raises:
+        NoFaceError: When no face is detected in the image
+        MultipleFacesError: When multiple faces are detected in the image
+        AppError: Base class for all application errors
     """
-    try:
-        # Read image from uploaded file
-        file_bytes = image_source.read()
-        np_array = np.frombuffer(file_bytes, np.uint8)
-        img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+    # Read image from uploaded file
+    file_bytes = image_source.read()
+    np_array = np.frombuffer(file_bytes, np.uint8)
+    img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+    
+    # Convert from BGR (OpenCV format) to RGB (face_recognition format)
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    # Find face locations
+    face_locations = face_recognition.face_locations(rgb_img)
+    
+    # If no faces found
+    if not face_locations:
+        raise NoFaceError()
+    
+    # If contains multiple faces:
+    if len(face_locations) > 1:
+        raise MultipleFacesError()
         
-        # Convert from BGR (OpenCV format) to RGB (face_recognition format)
-        rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
-        # Find face locations
-        face_locations = face_recognition.face_locations(rgb_img)
-        
-        # If no faces found
-        if not face_locations:
-            return None
-        
-        # If contains multiple faces:
-        if len(face_locations) > 1:
-            return None 
-            
-        # Generate encodings
-        face_encoding = face_recognition.face_encodings(rgb_img, face_locations)[0]
-        
-        return face_encoding
-    except Exception as e:
-        print(f"Error processing image: {e}")
-        return None
+    # Generate encodings
+    face_encoding = face_recognition.face_encodings(rgb_img, face_locations)[0]
+    
+    return face_encoding
 
 def load_data():
     if (os.path.exists(MODEL_PATH)):
