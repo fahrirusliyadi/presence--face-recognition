@@ -135,16 +135,23 @@ def predict_face(encoding):
     # Predict the class of the input encoding
     if (len(encodings) > 1):
         prediction = classifier.predict([encoding])
+        predicted_id = prediction[0]
+        
+        # Get the index of the predicted ID
+        predicted_index = ids.index(predicted_id)
+        
+        # Calculate the distance only for the predicted face
+        distance = face_recognition.face_distance([encodings[predicted_index]], encoding)[0]
 
-        # Calculate the distance to the closest known face
-        distances = face_recognition.face_distance(encodings, encoding)
-        best_match_index = np.argmin(distances)
+        print(f"Predicted ID: {predicted_id}, Distance: {distance}")
+        
         # Set a threshold for the distance
-        threshold = 0.6
-        if distances[best_match_index] > threshold:
+        # Lower distances indicate better matches
+        threshold = 0.4
+        if distance > threshold:
             return None
 
-        return prediction[0]
+        return predicted_id
     else:
         return None
     
