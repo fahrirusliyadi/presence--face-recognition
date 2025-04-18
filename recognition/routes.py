@@ -1,7 +1,8 @@
 from app import app
 from flask import jsonify, request
+from recognition.errors import NoFaceError
 from recognition.utils import delete_face_data, get_face_encoding, predict_face, save_face_data
-from app.errors import MissingParameterError, ValidationError, ResourceNotFoundError
+from app.errors import MissingParameterError, ResourceNotFoundError
 
 
 @app.route("/update", methods=["POST"])
@@ -65,7 +66,7 @@ def recognize():
     prediction = predict_face(encoding)
     
     if prediction is None:
-        raise ValidationError("Tidak ada wajah yang cocok ditemukan")
+        raise NoFaceError("Tidak ada wajah yang cocok ditemukan")
     
     return jsonify({"data": int(prediction)}), 200
     
