@@ -25,17 +25,17 @@ def update():
         - MultipleFacesError: If multiple faces are detected in the image
     """
     if 'image' not in request.files:
-        raise MissingParameterError("Image URL")
+        raise MissingParameterError("URL Gambar")
     
     if 'user_id' not in request.form:
-        raise MissingParameterError("User ID")
+        raise MissingParameterError("ID Pengguna")
 
     user_id = int(request.form.get('user_id'))
     image = request.files['image']
     
     encoding = get_face_encoding(image)
     save_face_data(user_id, encoding)
-    return jsonify({"message": f"User {user_id} updated successfully!"}), 200
+    return jsonify({"message": f"Pengguna {user_id} berhasil diperbarui!"}), 200
 
 @app.route("/recognize", methods=["POST"])
 def recognize():
@@ -57,7 +57,7 @@ def recognize():
         - MultipleFacesError: If multiple faces are detected in the image
     """
     if 'image' not in request.files:
-        raise MissingParameterError("Image URL")
+        raise MissingParameterError("URL Gambar")
     
     image = request.files['image']
     
@@ -65,7 +65,7 @@ def recognize():
     prediction = predict_face(encoding)
     
     if prediction is None:
-        raise ValidationError("No matching face found")
+        raise ValidationError("Tidak ada wajah yang cocok ditemukan")
     
     return jsonify({"data": int(prediction)}), 200
     
@@ -91,11 +91,11 @@ def delete():
     
     # Check if the JSON data exists and has user_id
     if not data or 'user_id' not in data:
-        raise MissingParameterError("User ID in JSON body")
+        raise MissingParameterError("ID Pengguna dalam body JSON")
 
     user_id = int(data['user_id'])
 
     if delete_face_data(user_id):
-        return jsonify({"message": f"User {user_id} deleted successfully!"}), 200
+        return jsonify({"message": f"Pengguna {user_id} berhasil dihapus!"}), 200
     
-    raise ResourceNotFoundError(f"User {user_id} not found")
+    raise ResourceNotFoundError(f"Pengguna {user_id} tidak ditemukan")
