@@ -147,7 +147,7 @@ def predict_face(encoding):
         
         # Set a threshold for the distance
         # Lower distances indicate better matches
-        threshold = 0.4
+        threshold = 0.5
         if distance > threshold:
             return None
 
