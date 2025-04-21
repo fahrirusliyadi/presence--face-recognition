@@ -22,7 +22,6 @@ def get_face_encoding(image_source):
         
     Raises:
         NoFaceError: When no face is detected in the image
-        MultipleFacesError: When multiple faces are detected in the image
         AppError: Base class for all application errors
     """
     # Read image from uploaded file
@@ -40,9 +39,47 @@ def get_face_encoding(image_source):
     if not face_locations:
         raise NoFaceError()
     
-    # If contains multiple faces:
+    # If contains multiple faces, select the best face based on size and position
     if len(face_locations) > 1:
-        raise MultipleFacesError()
+        selected_face_idx = 0
+        best_score = -1
+        
+        # Get image dimensions
+        height, width = rgb_img.shape[:2]
+        img_center_x = width / 2
+        img_center_y = height / 2
+        
+        # Find the face with the best combination of size and central positioning
+        for i, face_loc in enumerate(face_locations):
+            top, right, bottom, left = face_loc
+            
+            # Calculate face area (size factor)
+            face_width = right - left
+            face_height = bottom - top
+            face_area = face_width * face_height
+            
+            # Calculate face center coordinates
+            face_center_x = (left + right) / 2
+            face_center_y = (top + bottom) / 2
+            
+            # Calculate distance from image center (as a percentage of image dimensions)
+            x_distance = abs(face_center_x - img_center_x) / width
+            y_distance = abs(face_center_y - img_center_y) / height
+            center_distance = (x_distance + y_distance) / 2  # Average of both axes
+            
+            # Center-weighted score: size factor (70%) and center proximity factor (30%)
+            # Higher score is better
+            size_factor = face_area / (width * height)  # Normalized by image size
+            center_factor = 1 - center_distance  # Invert distance so closer = higher value
+            
+            score = (size_factor * 0.7) + (center_factor * 0.3)
+            
+            if score > best_score:
+                best_score = score
+                selected_face_idx = i
+        
+        # Use only the selected face
+        face_locations = [face_locations[selected_face_idx]]
         
     # Generate encodings
     face_encoding = face_recognition.face_encodings(rgb_img, face_locations)[0]
